@@ -6,6 +6,8 @@
 
 include { BEDTOOLS_INTERSECT                   } from '../../../modules/nf-core/bedtools/intersect/main'
 include { GAWK as FILTERBYDEPTH                } from '../../../modules/nf-core/gawk/main'
+include { GAWK as FILTERBYDEPTHDYN             } from '../../../modules/nf-core/gawk/main'
+include { GAWK as GETPERCENTILEVAL             } from '../../../modules/nf-core/gawk/main'
 include { TABIX_BGZIPTABIX                     } from '../../../modules/nf-core/tabix/bgziptabix/main'
 include { GETOPENREGION                        } from '../../../modules/local/getopenregion/main'
 include { GAWK as SLOPBOTH                     } from '../../../modules/nf-core/gawk/main'
@@ -23,10 +25,11 @@ include { GAWK as FILTERP                      } from '../../../modules/nf-core/
 
 workflow FOOTPRINTING {
     take:
-    ch_sites               // channel: [ val(meta), [ site ] ]
-    ch_peak             // channel: [ val(meta), [ peak ] ]
-    depth               // integer
+    ch_sites    // channel: [ val(meta), [ site ] ]
+    ch_peak     // channel: [ val(meta), [ peak ] ]
+    depth       // integer
     scripts_dir
+    percentile  // float
 
     main:
 
@@ -39,15 +42,31 @@ workflow FOOTPRINTING {
 
     ch_bed = BEDTOOLS_INTERSECT.out.intersect.map { meta, bed -> [meta + ['depth': depth], bed] }
 
-    FILTERBYDEPTH(ch_bed, [], false)
+    if (percentile) {
+        FILTERBYDEPTH(ch_bed, [], false)
+        ch_filtered = FILTERBYDEPTH.out.output
+        ch_percentile = Channel.value(percentile)
+    }
+    else {
+        FILTERBYDEPTHDYN(ch_bed, [], false)
+        ch_filtered = FILTERBYDEPTHDYN.out.output
+        GETPERCENTILEVAL(ch_filtered, [], false)
+        ch_percentile = GETPERCENTILEVAL.out.output
+            .map { _meta, output_file ->
+                def percentile_value = output_file.text.trim()
+                return percentile_value
+            }
+            .first()
+    }
 
-    TABIX_BGZIPTABIX(FILTERBYDEPTH.out.output)
+    TABIX_BGZIPTABIX(ch_filtered)
     ch_versions = ch_versions.mix(TABIX_BGZIPTABIX.out.versions.first())
 
     ch_aligned_inputs = TABIX_BGZIPTABIX.out.gz_tbi.join(ch_peak.map { meta, bed -> [meta + ['depth': depth], bed] })
     GETOPENREGION(
         ch_aligned_inputs.map { meta, gz, tbi, _bed -> [meta, gz, tbi] },
-        ch_aligned_inputs.map { meta, _gz, _tbi, bed -> [meta, bed] }
+        ch_aligned_inputs.map { meta, _gz, _tbi, bed -> [meta, bed] },
+        ch_percentile,
     )
 
     ch_openreg = GETOPENREGION.out.bed
@@ -59,7 +78,7 @@ workflow FOOTPRINTING {
 
     DNASENUM(BEDTOOLS_MERGE.out.bed, [], false)
 
-    PEAKINTERSECT(FILTERBYDEPTH.out.output.join(DNASENUM.out.output), [[:], []])
+    PEAKINTERSECT(ch_filtered.join(DNASENUM.out.output), [[:], []])
     ch_versions = ch_versions.mix(PEAKINTERSECT.out.versions.first())
 
     GNU_CUT(PEAKINTERSECT.out.intersect)
