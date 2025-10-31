@@ -77,7 +77,7 @@ while not(feof(fpCC))
   %else
   
   realStart = 1 + flankSize;
-  realStop = length(DHSCC) - flankSize;
+  realStop = min(length(DHSCC) - flankSize, maxColNum);
   %end
 
   % now compute pvalues for each kmer
