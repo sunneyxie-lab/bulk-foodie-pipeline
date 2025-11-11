@@ -16,7 +16,7 @@ include { BEDTOOLS_BAMTOBED                      } from '../modules/nf-core/bedt
 include { POSTPROCESSBED                         } from '../modules/local/postprocessbed/main'
 include { BEDTOOLS_GENOMECOV                     } from '../modules/nf-core/bedtools/genomecov/main'
 include { UCSC_BEDGRAPHTOBIGWIG                  } from '../modules/nf-core/ucsc/bedgraphtobigwig/main'
-include { MACS2_CALLPEAK                         } from '../modules/nf-core/macs2/callpeak/main'
+include { MACS3_CALLPEAK as MACS_CALLPEAK        } from '../modules/nf-core/macs3/callpeak/main'
 include { CALLRATIOANDDEPTH                      } from '../modules/local/callratioanddepth/main'
 include { IGVTOOLS_TOTDF as IGVTOOLS_TOTDF_RATIO } from '../modules/local/igvtools/totdf/main'
 include { IGVTOOLS_TOTDF as IGVTOOLS_TOTDF_DEPTH } from '../modules/local/igvtools/totdf/main'
@@ -43,12 +43,12 @@ include { GAWK as REFORMATRATIOADJUST            } from '../modules/nf-core/gawk
 
 workflow BULKFOODIEPIPELINE {
     take:
-    ch_samplesheet      // channel: samplesheet read in from --input
-    ch_fasta            // channel: fasta file
-    ch_sizes            // channel: sizes file
-    ch_bismark_index    // channel: [ path(bismark index)   ]
+    ch_samplesheet // channel: samplesheet read in from --input
+    ch_fasta // channel: fasta file
+    ch_sizes // channel: sizes file
+    ch_bismark_index // channel: [ path(bismark index)   ]
     genome_id
-    macs2_gsize
+    macs_gsize
     tss
     depth
     scripts_dir
@@ -168,14 +168,14 @@ workflow BULKFOODIEPIPELINE {
     ch_bedpe = POSTPROCESSBED.out.frag_bed.map { meta, bedpe ->
         [meta, bedpe, []]
     }
-    MACS2_CALLPEAK(
+    MACS_CALLPEAK(
         ch_bedpe,
-        macs2_gsize,
+        macs_gsize,
     )
-    ch_versions = ch_versions.mix(MACS2_CALLPEAK.out.versions)
+    ch_versions = ch_versions.mix(MACS_CALLPEAK.out.versions)
 
     HIGHSCOREPEAKS(
-        MACS2_CALLPEAK.out.peak
+        MACS_CALLPEAK.out.peak
     )
 
     PLOT(
