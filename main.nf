@@ -40,7 +40,7 @@ workflow ZHANGZHEN_BULKFOODIEPIPELINE {
         params.genomes[params.genome_id].sizes,
         params.genomes[params.genome_id].bismark_index,
         params.genome_id,
-        params.genomes[params.genome_id].macs2_gsize,
+        params.genomes[params.genome_id].macs_gsize,
         params.genomes[params.genome_id].tss,
         params.depth,
         params.scripts_dir,
