@@ -31,6 +31,7 @@ process GETOPENREGION {
     //               e.g. "*.fastq.gz" and NOT "*.fastq", "*.bam" and NOT "*.sam" etc.
     tuple val(meta), path(bed_gz), path(tbi)
     tuple val(meta2), path(peak)
+    val percentile
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
@@ -44,6 +45,8 @@ process GETOPENREGION {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    ratio_opt = percentile ? "-r $percentile" : ''
+
     // TODO nf-core: Where possible, a command MUST be provided to obtain the version number of the software e.g. 1.10
     //               If the software is unable to output a version number on the command-line then it can be manually specified
     //               e.g. https://github.com/nf-core/modules/blob/master/modules/nf-core/homer/annotatepeaks/main.nf
@@ -58,6 +61,7 @@ process GETOPENREGION {
         $args \\
         -s $bed_gz \\
         -p $peak \\
+        $ratio_opt \\
         > ${prefix}.bed
 
     cat <<-END_VERSIONS > versions.yml

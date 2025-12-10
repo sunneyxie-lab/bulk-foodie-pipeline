@@ -29,11 +29,12 @@ include { paramsSummaryMultiqc                   } from '../subworkflows/nf-core
 include { softwareVersionsToYAML                 } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText                 } from '../subworkflows/local/utils_nfcore_bulkfoodiepipeline_pipeline'
 include { FOOTPRINTING                           } from '../subworkflows/local/footprinting'
+include { NONPC                                  } from '../subworkflows/local/nonpc'
 include { BEDTOOLS_SPLIT as PEAKS_SPLIT          } from '../modules/nf-core/bedtools/split/main'
 include { CAT_CAT as CONCAT_FOOTPRINTS           } from '../modules/nf-core/cat/cat/main'
 include { BEDTOOLS_SORT as SORT_FOOTPRINTS       } from '../modules/nf-core/bedtools/sort/main'
 include { ADJUSTRATIO                            } from '../modules/local/adjustratio/main'
-include { GAWK as REFORMATRATIOADJUST            } from '../modules/nf-core/gawk/main'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -211,22 +212,27 @@ workflow BULKFOODIEPIPELINE {
 
     ch_peak = HIGHSCOREPEAKS.out.bed
 
-    PEAKS_SPLIT(ch_peak.map { meta, bed -> [meta, bed, 10] })
+    PEAKS_SPLIT(ch_peak.map { meta, bed -> [meta, bed, params.split_num] })
 
-    ch_adjusted_sites = CALLRATIOANDDEPTH.out.sites
-    if (expected_ratio_file) {
+    if (params.adjustment == 'pc') {
         ADJUSTRATIO(
             CALLRATIOANDDEPTH.out.sites,
             expected_ratio_file,
             ch_fasta,
         )
-        REFORMATRATIOADJUST(
-            ADJUSTRATIO.out.txt,
-            [],
-            false,
-        )
-        ch_adjusted_sites = REFORMATRATIOADJUST.out.output
+        ch_adjusted_sites = ADJUSTRATIO.out.txt
     }
+    else if (params.adjustment == 'nonpc') {
+        NONPC(
+            CALLRATIOANDDEPTH.out.sites,
+            genome_id,
+        )
+        ch_adjusted_sites = NONPC.out.qnorm_final
+    }
+    else {
+        error("ERROR: Invalid adjustment '${params.adjustment}'. Valid options are: 'pc', 'nonpc'")
+    }
+
 
     ch_footprinting_input = ch_adjusted_sites
         .combine(PEAKS_SPLIT.out.beds.transpose(), by: 0)
@@ -242,9 +248,10 @@ workflow BULKFOODIEPIPELINE {
         depth,
         scripts_dir,
     )
+    ftprts = FOOTPRINTING.out.ftprts
 
     CONCAT_FOOTPRINTS(
-        FOOTPRINTING.out.ftprts.map { meta, files ->
+        ftprts.map { meta, files ->
             [meta.findAll { !it.key.equals('chunk') }, files]
         }.groupTuple()
     )
