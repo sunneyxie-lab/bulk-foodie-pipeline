@@ -15,30 +15,34 @@
 // TODO nf-core: Optional inputs are not currently supported by Nextflow. However, using an empty
 //               list (`[]`) instead of a file can be used to work around this issue.
 
-process ADJUSTRATIO {
-    tag "${meta.id}"
+process CENTERINGQNORM {
+    tag "$meta.id"
     label 'process_single'
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "docker.io/zhangzhen0226/fditools:python-3.10_pysam-0.19.1--8adc4d758a830d08"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/YOUR-TOOL-HERE':
+        'biocontainers/YOUR-TOOL-HERE' }"
 
-    input:
-    // TODO nf-core: Where applicable all sample-specific information e.g. "id", "single_end", "read_group"
+    input:// TODO nf-core: Where applicable all sample-specific information e.g. "id", "single_end", "read_group"
     //               MUST be provided as an input via a Groovy Map called "meta".
     //               This information may not be required in some instances e.g. indexing reference genome files:
     //               https://github.com/nf-core/modules/blob/master/modules/nf-core/bwa/index/main.nf
     // TODO nf-core: Where applicable please provide/convert compressed files as input/output
     //               e.g. "*.fastq.gz" and NOT "*.fastq", "*.bam" and NOT "*.sam" etc.
     tuple val(meta), path(sites)
-    path expected_ratio
-    path genome_fasta
+    val organsim
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("*.ratio_adjust.txt"), emit: txt
+    tuple val(meta), path("*_original_cr.bedgraph"), emit: cr_ori_bg
+    tuple val(meta), path("*_Qnormed_cr.bedgraph"), emit: cr_qnorm_bg
+    tuple val(meta), path("*_Qnormed_final.bed"), emit: cr_qnorm_final
+    tuple val(meta), path("*_ridges.pdf"), emit: plot_file
+    tuple val(meta), path("*_dropout.png"), emit: dropout_plot
     // TODO nf-core: List additional required output channels/values here
-    path "versions.yml", emit: versions
+    path "versions.yml"           , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -46,10 +50,6 @@ process ADJUSTRATIO {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-
-    if (expected_ratio == null) {
-        error("ERROR: expected_ratio is required but was null")
-    }
     // TODO nf-core: Where possible, a command MUST be provided to obtain the version number of the software e.g. 1.10
     //               If the software is unable to output a version number on the command-line then it can be manually specified
     //               e.g. https://github.com/nf-core/modules/blob/master/modules/nf-core/homer/annotatepeaks/main.nf
@@ -60,16 +60,18 @@ process ADJUSTRATIO {
     // TODO nf-core: Please replace the example samtools command below with your module's command
     // TODO nf-core: Please indent the command appropriately (4 spaces!!) to help with readability ;)
     """
-    add_expectedRatio_realRatio.py \\
-        ${args} \\
-        --output_file ${prefix}_sites.ratio_adjust.txt \\
-        --expected_ratio_file ${expected_ratio} \\
-        --genome_fasta ${genome_fasta} \\
-        ${sites}
+    centering_quantile_norm_NonPC.R \\
+        $sites \\
+        ${prefix}_ridges.pdf \\
+        ${prefix}_original_cr.bedgraph \\
+        ${prefix}_Qnormed_cr.bedgraph \\
+        ${prefix}_Qnormed_final.bed \\
+        ${prefix}_dropout.png \\
+        ${organsim}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(echo \$(python --version 2>&1) | sed 's/Python //')
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """
 
@@ -80,13 +82,21 @@ process ADJUSTRATIO {
     //               Have a look at the following examples:
     //               Simple example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bcftools/annotate/main.nf#L47-L63
     //               Complex example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bedtools/split/main.nf#L38-L54
+    // TODO nf-core: If the module doesn't use arguments ($args), you SHOULD remove:
+    //               - The definition of args `def args = task.ext.args ?: ''` above.
+    //               - The use of the variable in the script `echo $args ` below.
     """
+    echo $args
     
-    touch ${prefix}.bam
+    touch ${prefix}_ridges.pdf
+    touch ${prefix}_original_cr.bedgraph
+    touch ${prefix}_Qnormed_cr.bedgraph
+    touch ${prefix}_Qnormed_final.bed
+    touch ${prefix}_dropout.png
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(echo \$(python --version 2>&1) | sed 's/Python //')
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """
 }

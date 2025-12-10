@@ -1,8 +1,8 @@
-# zhangzhen/bulkfoodiepipeline
+# bulk-foodie-pipeline
 
 ## Introduction
 
-**zhangzhen/bulkfoodiepipeline** is a bioinformatics pipeline used for in-vivo bulk FOODIE sequencing data. It pre-processes raw data from FastQ inputs, aligns the reads, computes conversion rates of cytosines, and calls footprints of transcription factors.
+**bulk-foodie-pipeline** is a bioinformatics pipeline used for in-vivo bulk FOODIE sequencing data. It pre-processes raw data from FastQ inputs, aligns the reads, computes conversion rates of cytosines, and calls footprints of transcription factors.
 
 <!-- TODO nf-core:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
@@ -41,7 +41,7 @@ Now, you can run the pipeline using:
 <!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
-nextflow run zhangzhen/bulkfoodiepipeline \
+nextflow run sunneyxie-lab/bulkfoodiepipeline \
    -profile conda \
    --input samplesheet.csv \
    --depth <NUM> \
@@ -54,7 +54,7 @@ nextflow run zhangzhen/bulkfoodiepipeline \
 
 ## Credits
 
-zhangzhen/bulkfoodiepipeline was originally written by Zhang Zhen, Shen Ke, Wang Quangui.
+bulk-foodie-pipeline was originally written by Fanchong Jian, Dubai Li, Ke Shen, Quangui Wang, Chen Xie, Zhen Zhang (in alphabetical order). Now this pipeline is fully maintained by Zhen Zhang.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 - group members at Sunney Xie Lab
@@ -71,11 +71,6 @@ If you use `bulk-foodie-pipeline` for your analysis, please cite the `FOODIE` ar
 
 > R. He, W. Dong, Z. Wang, C. Xie, L. Gao, W. Ma, K. Shen, D. Li, Y. Pang, F. Jian, J. Zhang, Y. Yuan, X. Wang, Z. Zhang, Y. Zheng, S. Liu, C. Luo, X. Chai, J. Ren, Z. Zhu, & X.S. Xie, **Genome-wide single-cell and single-molecule footprinting of transcription factors with deaminase**, _Proc. Natl. Acad. Sci. U.S.A._ 121 (52) e2423270121, [doi: 10.1073/pnas.2423270121](https://doi.org/10.1073/pnas.2423270121) (2024).
 
-<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
-<!-- If you use zhangzhen/bulkfoodiepipeline for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
-
-<!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
-
 An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
 
 This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/main/LICENSE).
@@ -85,3 +80,5 @@ This pipeline uses code and infrastructure developed and maintained by the [nf-c
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
 >
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
+
+We used a modified version of digital genomic footprinting in [Global mapping of protein-DNA interactions in vivo by digital genomic footprinting](https://noble.gs.washington.edu/proj/footprinting/).

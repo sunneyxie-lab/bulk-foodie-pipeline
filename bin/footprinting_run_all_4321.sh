@@ -106,7 +106,10 @@ fi
 
 
 # max size of an intergenic region
-maxColNum=15000
+# for PC adjustment
+# maxColNum=15000
+# for non-PC (qnorm by Li Dubai)
+maxColNum=30000
 # q-value threshold for output footprints
 qValueThresh=1
 # min size of footprints 
