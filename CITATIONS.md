@@ -1,4 +1,4 @@
-# zhangzhen/bulkfoodiepipeline: Citations
+# bulk-foodie-pipeline: Citations
 
 ## [nf-core](https://pubmed.ncbi.nlm.nih.gov/32055031/)
 
@@ -13,6 +13,10 @@
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 
 > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
+
+- [Footprinting](https://www.nature.com/articles/nmeth.1313)
+
+> Hesselberth, J., Chen, X., Zhang, Z. et al. Global mapping of protein-DNA interactions in vivo by digital genomic footprinting. Nat Methods 6, 283–289 (2009). https://doi.org/10.1038/nmeth.1313
 
 ## Software packaging/containerisation tools
 

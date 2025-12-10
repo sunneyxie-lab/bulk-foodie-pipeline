@@ -16,14 +16,15 @@
 //               list (`[]`) instead of a file can be used to work around this issue.
 
 process ADJUSTRATIO {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_single'
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
     container "docker.io/zhangzhen0226/fditools:python-3.10_pysam-0.19.1--8adc4d758a830d08"
 
-    input:// TODO nf-core: Where applicable all sample-specific information e.g. "id", "single_end", "read_group"
+    input:
+    // TODO nf-core: Where applicable all sample-specific information e.g. "id", "single_end", "read_group"
     //               MUST be provided as an input via a Groovy Map called "meta".
     //               This information may not be required in some instances e.g. indexing reference genome files:
     //               https://github.com/nf-core/modules/blob/master/modules/nf-core/bwa/index/main.nf
@@ -37,7 +38,7 @@ process ADJUSTRATIO {
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
     tuple val(meta), path("*.ratio_adjust.txt"), emit: txt
     // TODO nf-core: List additional required output channels/values here
-    path "versions.yml"           , emit: versions
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -45,6 +46,10 @@ process ADJUSTRATIO {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+
+    if (expected_ratio == null) {
+        error("ERROR: expected_ratio is required but was null")
+    }
     // TODO nf-core: Where possible, a command MUST be provided to obtain the version number of the software e.g. 1.10
     //               If the software is unable to output a version number on the command-line then it can be manually specified
     //               e.g. https://github.com/nf-core/modules/blob/master/modules/nf-core/homer/annotatepeaks/main.nf
@@ -56,11 +61,11 @@ process ADJUSTRATIO {
     // TODO nf-core: Please indent the command appropriately (4 spaces!!) to help with readability ;)
     """
     add_expectedRatio_realRatio.py \\
-        $args \\
+        ${args} \\
         --output_file ${prefix}_sites.ratio_adjust.txt \\
-        --expected_ratio_file $expected_ratio \\
-        --genome_fasta $genome_fasta \\
-        $sites
+        --expected_ratio_file ${expected_ratio} \\
+        --genome_fasta ${genome_fasta} \\
+        ${sites}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

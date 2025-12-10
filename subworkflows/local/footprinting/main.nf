@@ -5,7 +5,6 @@
 // TODO nf-core: A subworkflow SHOULD import at least two modules
 
 include { BEDTOOLS_INTERSECT                   } from '../../../modules/nf-core/bedtools/intersect/main'
-include { GAWK as FILTERBYDEPTH                } from '../../../modules/nf-core/gawk/main'
 include { GAWK as FILTERBYDEPTHDYN             } from '../../../modules/nf-core/gawk/main'
 include { GAWK as GETPERCENTILEVAL             } from '../../../modules/nf-core/gawk/main'
 include { TABIX_BGZIPTABIX                     } from '../../../modules/nf-core/tabix/bgziptabix/main'
@@ -29,7 +28,6 @@ workflow FOOTPRINTING {
     ch_peak     // channel: [ val(meta), [ peak ] ]
     depth       // integer
     scripts_dir
-    percentile  // float
 
     main:
 
@@ -42,22 +40,15 @@ workflow FOOTPRINTING {
 
     ch_bed = BEDTOOLS_INTERSECT.out.intersect.map { meta, bed -> [meta + ['depth': depth], bed] }
 
-    if (percentile) {
-        FILTERBYDEPTH(ch_bed, [], false)
-        ch_filtered = FILTERBYDEPTH.out.output
-        ch_percentile = Channel.value(percentile)
-    }
-    else {
-        FILTERBYDEPTHDYN(ch_bed, [], false)
-        ch_filtered = FILTERBYDEPTHDYN.out.output
-        GETPERCENTILEVAL(ch_filtered, [], false)
-        ch_percentile = GETPERCENTILEVAL.out.output
-            .map { _meta, output_file ->
-                def percentile_value = output_file.text.trim()
-                return percentile_value
-            }
-            .first()
-    }
+    FILTERBYDEPTHDYN(ch_bed, [], false)
+    ch_filtered = FILTERBYDEPTHDYN.out.output
+    GETPERCENTILEVAL(ch_filtered, [], false)
+    ch_percentile = GETPERCENTILEVAL.out.output
+        .map { _meta, output_file ->
+            def percentile_value = output_file.text.trim()
+            return percentile_value
+        }
+        .first()
 
     TABIX_BGZIPTABIX(ch_filtered)
     ch_versions = ch_versions.mix(TABIX_BGZIPTABIX.out.versions.first())
