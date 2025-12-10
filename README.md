@@ -45,7 +45,7 @@ nextflow run sunneyxie-lab/bulkfoodiepipeline \
    -profile conda \
    --input samplesheet.csv \
    --depth <NUM> \
-   --expected_ratio_file <EXPECTED_RATIO_FILE> \
+   --adjustment pc|nonpc \
    --outdir <OUTDIR>
 ```
 
